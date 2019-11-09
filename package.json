@@ -9,10 +9,16 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "compress": "0.99.0",
+    "compression": "1.7.4",
     "crawler": "1.2.1",
+    "ejs": "2.7.1",
     "express": "4.17.1",
+    "fs": "0.0.1-security",
+    "helmet": "3.21.2",
     "http": "0.0.0",
     "morgan": "1.9.1",
+    "path": "0.12.7",
     "request": "2.88.0"
   }
 }
