@@ -1,0 +1,58 @@
+<body class="">
+
+    <table role="presentation" border="0" cellpadding="0" cellspacing="0" class="body">
+    <tr>
+    <td>&nbsp;</td>
+    <td class="container">
+        <div class="content">
+
+        <!-- START CENTERED WHITE CONTAINER -->
+        <table role="presentation" class="main">
+
+            <!-- START MAIN CONTENT AREA -->
+            <tr>
+            <td class="wrapper">
+                <table role="presentation" border="0" cellpadding="0" cellspacing="0">
+                <tr>
+                    <td>
+                    <h1>URL Trackit</h1>
+                    <table role="presentation" border="0" cellpadding="0" cellspacing="0" class="btn btn-primary">
+                        <tbody>
+                        <tr>
+                            <td align="left">
+                            <table role="presentation" border="0" cellpadding="0" cellspacing="0">
+                                <tbody>
+                                <tr>
+ 
+                                    <form action='/trace' method='POST'>
+                                        <label ="tracedPage">Trace URL:</label><br/><br/><input id="tracedPage" name="tracedPage" />
+                                        <button action="/trace">Trace</button>
+                                    </form>
+                                    <br/>
+                                    <br/>
+                                    <div><%- traceData %></div>
+                                </tr>
+                                </tbody>
+                            </table>
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+                    <br>
+                    </td>
+                </tr>
+                </table>
+            </td>
+            </tr>
+
+        <!-- END MAIN CONTENT AREA -->
+        </table>
+        <!-- END CENTERED WHITE CONTAINER -->
+
+        </div>
+    </td>
+    <td>&nbsp;</td>
+    </tr>
+    </table>
+
+</body>
