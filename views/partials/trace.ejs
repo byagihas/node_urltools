@@ -15,7 +15,7 @@
                 <table role="presentation" border="0" cellpadding="0" cellspacing="0">
                 <tr>
                     <td>
-                    <h1>Current time: <%- year %>-<%- month %>-<%- day %> <%- hour %>:<%- minute %>:<%- second %></h1>
+                    <h1>URL Trackit</h1>
                     <table role="presentation" border="0" cellpadding="0" cellspacing="0" class="btn btn-primary">
                         <tbody>
                         <tr>
@@ -23,8 +23,10 @@
                             <table role="presentation" border="0" cellpadding="0" cellspacing="0">
                                 <tbody>
                                 <tr>
-                                    <td>Current time: <%- year %>-<%- month %>-<%- day %> <%- hour %>:<%- minute %>:<%- second %></td>
-                                    <td>ISO: <%- toISO %></td>
+                                    <form action='/trace' method='POST'>
+                                        <label ="tracedPage">Trace URL:</label><br/><br/><input id="tracedPage" name="tracedPage" />
+                                        <button action="/trace">Trace</button>
+                                    </form>
                                 </tr>
                                 </tbody>
                             </table>

@@ -4,19 +4,18 @@ const fs = require('fs');
 const path = require('path');
 const url = require('url');
 const cors = require('cors');
-
 const ejs = require('ejs');
+
 const helmet = require('helmet');
 const compression = require('compression');
 const { http, https } = require('follow-redirects');
-
 const express = require('express');
 const morgan = require('morgan');
 const Crawler = require('crawler');
 const request = require('request');
 const rateLimit = require('express-rate-limit');
 const bodyParser = require('body-parser');
-
+const lessMiddleware = require('less-middleware');
 const { DateTime } = require('luxon');
 
 const app = express();
@@ -49,37 +48,58 @@ app.use(helmet.featurePolicy({
 app.use(compression());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
-app.use(express.static(__dirname + '/public'));
+app.use(lessMiddleware(__dirname + '/views'));
+app.use(express.static(__dirname + '/views'));
 
 // GET - /
+// Shows current time
 app.get('/', (req, res, err) => {
-    // Set headers for Cross Origin calls
-    res.header("Access-Control-Allow-Origin", "*");
-    res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
-    res.header('Content-Type', 'application/json');
     const time = new Date(Date.now()).toISOString();
     const browsertime = Intl.DateTimeFormat().resolvedOptions().timeZone;
     const converted = DateTime.fromISO(time, { zone: browsertime });
 
-    // Create time object to strong value returned from Luxor
-    let timeObject = JSON.stringify(converted.c)
-    let year = converted.c.year
-    let month = converted.c.month
-    let day = converted.c.day
-    let hour = converted.c.hour
-    let minute = converted.c.minute
-    let seconds = converted.c.second
+    // Create time object to strong value returned from Luxon
+    let timeObject =  converted.c
+    let year = String(converted.c.year).length > 1 ? converted.c.year : '0' + converted.c.year;
+    let month = String(converted.c.month).length > 1 ? converted.c.month : '0' + converted.c.month;
+    let day = String(converted.c.day).length > 1 ? converted.c.day : '0' + converted.c.day;
+    let hour = String(converted.c.hour).length > 1 ? converted.c.hour : '0' + converted.c.hour;
+    let minute = String(converted.c.minute).length > 1 ? converted.c.minute : '0' + converted.c.minute;
+    let second = String(converted.c.second).length > 1 ? converted.c.second : '0' + converted.c.second;
 
-    console.log(timeObject);
-    res.send(timeObject);
-    res.end();
+    let toIso = (year + '-' + month + '-' + day + 'T' + hour + ':' + minute + ':' + second);
+    
+    let timeData = {
+      year: year,
+      month: month,
+      day: day,
+      hour: hour,
+      minute: minute,
+      second: second
+    }
+
+    console.log(toIso)
+    res.render('index', {
+      year: year,
+      month: month,
+      day: day,
+      hour: hour,
+      minute: minute,
+      second: second,
+      toISO: toIso
+    });
+
 });
 
+// GET - /trace
+// returns current time in your timezone as object
 app.get('/trace', (req, res, err) => {
-    res.render('index');
+    res.render('trace_page');
     res.end();
 });
 
+// POST - /trace
+// post URL to trace
 app.post('/trace', (req, res, err) => {
     const pageToVisit = req.body.tracedPage;
     const parsedurl = url.parse(pageToVisit);
@@ -91,54 +111,46 @@ app.post('/trace', (req, res, err) => {
     
     let render = async () => {
       let traceData = await tracer();
-      return res.render('trace', { traceData: traceData });
+      return res.render('traced_page', { traceData: traceData });
     }
     render();
 
 });
 
-let getURLData = async (visitUrl, data) => {
-    return new Promise((resolve, reject) => {
-      request({
-        url: visitUrl,
-        method: 'GET',
-        followAllRedirects: true
-      }, function(error, response) {
-          if (error) {
-              console.log(error);
-              reject();
-          } else {
-              let data = JSON.stringify(response.request._redirect.redirects);
-              console.log(data);
-              resolve(data);
-          }
-      });
-    })
-};
-
+// Listen
 app.listen('8080', 'localhost', () => {
     console.log('server running on 8080')
 });
 
-/*let theory = {
-id: '0',
-title: req.body['title'],
-content: req.body['content'],
-category: req.body['category'],
 
-timer: '0',
-truthCount: 0,
-falseCount: 0
-}*/
+// FUNCTIONS
+//-------------------------------------------------------------------------------//
 
-/*
-var interval_id = setInterval(function() {
-    res.send(
-      '<html><head></head><body><div style=\'text-align:center;font-size:32px;padding:1em;\'>Your current time is:<br/><br/>'
-      + year  + '/' + month + '/' + day + ' ' + hour + ':' + minute + ':' + seconds 
-      + '</div></body></html>')
-  }, 50);
+// getURLData
+// async function to get data from URL using request
+let getURLData = async (visitUrl, data) => {
+  return new Promise((resolve, reject) => {
+    request({
+      url: visitUrl,
+      method: 'GET',
+      followAllRedirects: true
+    }, (error, response) => {
+        if (error) {
+            console.log(error);
+            reject();
+        } else {
+            data = JSON.stringify(response.request._redirect.redirects);
+            console.log(data);
+            resolve(data);
+        }
+    });
+  })
+};
 
-req.socket.on('close', function() {
-  clearInterval(interval_id);
-});*/
+// getCurrentTimeObject
+// Returns current time for browser in ISO 
+let getCurrentTimeObject = async (time) => {
+  return new Promise((resolve, reject) => {
+    
+  });
+};
