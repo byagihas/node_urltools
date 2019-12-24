@@ -39,7 +39,7 @@ app.use(helmet.featurePolicy({
   features: {
     fullscreen: ["'self'"],
     vibrate: ["'none'"],
-    payment: ['coinbae.co'],
+    payment: ["'none'"],
     syncXhr: ["none'"]
   }
 }));
@@ -104,14 +104,25 @@ app.post('/trace', (req, res, err) => {
     const pageToVisit = req.body.tracedPage;
     const parsedurl = url.parse(pageToVisit);
 
-    let tracer = async () => {
-      let traceData = await getURLData(parsedurl);
-      return traceData;
+    let tracer = async (err) => {
+      try {
+          let traceData = await getURLData(parsedurl);
+          let parsedData = JSON.stringify(traceData)
+          let formattedData = parsedData.replace("[","").replace("]","");
+          return formattedData;
+      } catch {
+          throw err;
+      }
     }
     
-    let render = async () => {
-      let traceData = await tracer();
-      return res.render('traced_page', { traceData: traceData });
+    let render = async (err) => {
+      try {  
+          let traceData = await tracer();
+          console.log(traceData)
+          return res.render('traced_page', { traceData: traceData });
+      } catch {
+          throw err;
+      }
     }
     render();
 
@@ -128,23 +139,27 @@ app.listen('8080', 'localhost', () => {
 
 // getURLData
 // async function to get data from URL using request
-let getURLData = async (visitUrl, data) => {
-  return new Promise((resolve, reject) => {
-    request({
-      url: visitUrl,
-      method: 'GET',
-      followAllRedirects: true
-    }, (error, response) => {
-        if (error) {
-            console.log(error);
-            reject();
-        } else {
-            data = JSON.stringify(response.request._redirect.redirects);
-            console.log(data);
-            resolve(data);
-        }
-    });
-  })
+let getURLData = async (visitUrl, data, err) => {
+  try {
+    return new Promise((resolves, rejects) => {
+        request({
+            url: visitUrl,
+            method: 'GET',
+            followAllRedirects: true
+        }, (error, response) => {
+            if (error) {
+                console.log(error);
+                rejects();
+                throw error;
+            } else {
+                data = JSON.stringify(response.request._redirect.redirects);
+                resolves(data);
+            }
+        });
+    })
+  } catch {
+      throw err;
+  }
 };
 
 // getCurrentTimeObject
