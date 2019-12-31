@@ -54,41 +54,33 @@ app.use(express.static(__dirname + '/views'));
 // GET - /
 // Shows current time
 app.get('/', (req, res, err) => {
-    const time = new Date(Date.now()).toISOString();
-    const browsertime = Intl.DateTimeFormat().resolvedOptions().timeZone;
-    const converted = DateTime.fromISO(time, { zone: browsertime });
 
-    // Create time object to strong value returned from Luxon
-    let timeObject =  converted.c
-    let year = String(converted.c.year).length > 1 ? converted.c.year : '0' + converted.c.year;
-    let month = String(converted.c.month).length > 1 ? converted.c.month : '0' + converted.c.month;
-    let day = String(converted.c.day).length > 1 ? converted.c.day : '0' + converted.c.day;
-    let hour = String(converted.c.hour).length > 1 ? converted.c.hour : '0' + converted.c.hour;
-    let minute = String(converted.c.minute).length > 1 ? converted.c.minute : '0' + converted.c.minute;
-    let second = String(converted.c.second).length > 1 ? converted.c.second : '0' + converted.c.second;
-
-    let toIso = (year + '-' + month + '-' + day + 'T' + hour + ':' + minute + ':' + second);
-    
-    let timeData = {
-      year: year,
-      month: month,
-      day: day,
-      hour: hour,
-      minute: minute,
-      second: second
+    let getTime = async(error) => {
+      try{
+          let time = await getCurrentTimeObject();
+          return time;
+      } catch {
+          throw error;
+      }
+      
     }
 
-    console.log(toIso)
-    res.render('index', {
-      year: year,
-      month: month,
-      day: day,
-      hour: hour,
-      minute: minute,
-      second: second,
-      toISO: toIso
-    });
-
+    let render = async (error) => {
+      try {
+        let timeData = await getTime();
+        res.render('index', {
+          year: timeData.year,
+          month: timeData.month,
+          day: timeData.day,
+          hour: timeData.hour,
+          minute: timeData.minute,
+          second: timeData.second
+        });
+      } catch {
+        throw error;
+      }
+    }
+    render();
 });
 
 // GET - /trace
@@ -165,7 +157,35 @@ let getURLData = async (visitUrl, data, err) => {
 // getCurrentTimeObject
 // Returns current time for browser in ISO 
 let getCurrentTimeObject = async (time) => {
-  return new Promise((resolve, reject) => {
-    
+  return new Promise((resolves, rejects) => {
+    try {
+      const time = new Date(Date.now()).toISOString();
+      const browsertime = Intl.DateTimeFormat().resolvedOptions().timeZone;
+      const converted = DateTime.fromISO(time, { zone: browsertime });
+  
+      // Create time object to strong value returned from Luxon
+      let timeObject =  converted.c
+      let year = String(converted.c.year).length > 1 ? converted.c.year : '0' + converted.c.year;
+      let month = String(converted.c.month).length > 1 ? converted.c.month : '0' + converted.c.month;
+      let day = String(converted.c.day).length > 1 ? converted.c.day : '0' + converted.c.day;
+      let hour = String(converted.c.hour).length > 1 ? converted.c.hour : '0' + converted.c.hour;
+      let minute = String(converted.c.minute).length > 1 ? converted.c.minute : '0' + converted.c.minute;
+      let second = String(converted.c.second).length > 1 ? converted.c.second : '0' + converted.c.second;
+  
+      let toIso = (year + '-' + month + '-' + day + 'T' + hour + ':' + minute + ':' + second);
+      
+      let timeData = {
+        year: year,
+        month: month,
+        day: day,
+        hour: hour,
+        minute: minute,
+        second: second
+      }
+      
+      resolves(timeData);
+    } catch {
+      rejects();
+    }
   });
 };
