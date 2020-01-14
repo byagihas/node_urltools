@@ -5,15 +5,17 @@
     <td>&nbsp;</td>
     <td class="container">
         <div class="content">
+
         <!-- START CENTERED WHITE CONTAINER -->
         <table role="presentation" class="main">
+
             <!-- START MAIN CONTENT AREA -->
             <tr>
             <td class="wrapper">
                 <table role="presentation" border="0" cellpadding="0" cellspacing="0">
                 <tr>
                     <td>
-                    <h1>Current time: <%- year %>-<%- month %>-<%- day %> <%- hour %>:<%- minute %>:<%- second %></h1>
+                    <h1>URL Trace</h1>
                     <table role="presentation" border="0" cellpadding="0" cellspacing="0" class="btn btn-primary">
                         <tbody>
                         <tr>
@@ -21,7 +23,21 @@
                             <table role="presentation" border="0" cellpadding="0" cellspacing="0">
                                 <tbody>
                                 <tr>
-                                    <td><a href='/trace'>Trace</a></td>
+                                    <form action='/trace' method='POST' class="trace">
+                                        <label ="tracedPage">Trace URL:</label><br/><br/><input id="tracedPage" name="tracedPage" class="input trace-input"/>
+                                        <br/>
+                                        <button action="/trace" class="trace-button">Trace</button>
+                                    </form>
+                                </tr>
+                                <tr>
+                                    <div class="">
+                                        <br/>
+                                        Invalid URL, please input in valid URL format (http://, https://)
+                                    </div>
+                                </tr>
+                                <br/><br/>
+                                <tr>
+                                    <td><a href='/'>Current time</a></td>
                                 </tr>
                                 </tbody>
                             </table>
@@ -35,9 +51,11 @@
                 </table>
             </td>
             </tr>
+
         <!-- END MAIN CONTENT AREA -->
         </table>
         <!-- END CENTERED WHITE CONTAINER -->
+
         </div>
     </td>
     <td>&nbsp;</td>

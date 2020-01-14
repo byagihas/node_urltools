@@ -9,6 +9,7 @@ const ejs = require('ejs');
 const helmet = require('helmet');
 const compression = require('compression');
 const { http, https } = require('follow-redirects');
+
 const express = require('express');
 const morgan = require('morgan');
 const Crawler = require('crawler');
@@ -53,34 +54,34 @@ app.use(express.static(__dirname + '/views'));
 
 // GET - /
 // Shows current time
-app.get('/', (req, res, err) => {
-
-    let getTime = async(error) => {
-      try{
-          let time = await getCurrentTimeObject();
-          return time;
-      } catch {
-          throw error;
+app.get('/', (req, res) => {
+      let getTime = async(error) => {
+        try{
+            let time = await getCurrentTimeObject();
+            return time;
+        } catch {
+            console.log(error);
+            res.render('index_error')
+        }
       }
-      
-    }
 
-    let render = async (error) => {
-      try {
-        let timeData = await getTime();
-        res.render('index', {
-          year: timeData.year,
-          month: timeData.month,
-          day: timeData.day,
-          hour: timeData.hour,
-          minute: timeData.minute,
-          second: timeData.second
-        });
-      } catch {
-        throw error;
+      let render = async(error) => {
+        try {
+          let timeData = await getTime();
+          res.render('index', {
+            year: timeData.year,
+            month: timeData.month,
+            day: timeData.day,
+            hour: timeData.hour,
+            minute: timeData.minute,
+            second: timeData.second
+          });
+        } catch {
+          console.log(error);
+          res.render('index_error')
+        }
       }
-    }
-    render();
+      render();
 });
 
 // GET - /trace
@@ -93,31 +94,38 @@ app.get('/trace', (req, res, err) => {
 // POST - /trace
 // post URL to trace
 app.post('/trace', (req, res, err) => {
-    const pageToVisit = req.body.tracedPage;
-    const parsedurl = url.parse(pageToVisit);
 
-    let tracer = async (err) => {
-      try {
-          let traceData = await getURLData(parsedurl);
-          let parsedData = JSON.stringify(traceData)
-          let formattedData = parsedData.replace("[","").replace("]","");
-          return formattedData;
-      } catch {
-          throw err;
-      }
-    }
-    
-    let render = async (err) => {
-      try {  
-          let traceData = await tracer();
-          console.log(traceData)
-          return res.render('traced_page', { traceData: traceData });
-      } catch {
-          throw err;
-      }
-    }
-    render();
+    const pageToVisit = String(req.body.tracedPage).trim();
+      // Validate pageToVisit to ensure it's a properly constructed URL.
+      // Else send invalid URL response.
+      if((pageToVisit.indexOf('http://') !== -1 || pageToVisit.indexOf('https://') !== -1) && pageToVisit.indexOf(' ') <= 0 ){
+        const parsedurl = url.parse(pageToVisit);
 
+        let tracer = async (error) => {
+          try {
+              let traceData = await getURLData(parsedurl);
+              let parsedData = JSON.stringify(traceData)
+              let formattedData = parsedData.replace("[","").replace("]","");
+              return formattedData;
+          } catch {
+            console.log(error);
+            return res.render('traced_page_error');
+          }
+        }
+        
+        let render = async (error) => {
+          try {
+              let traceData = await tracer();
+              return res.render('traced_page', { traceData: traceData });
+          } catch {
+              console.log(error);
+              return res.render('traced_page_error');
+          }
+        }
+        render(); 
+      } else {
+        res.render('traced_page_error');
+      }
 });
 
 // Listen
@@ -138,12 +146,13 @@ let getURLData = async (visitUrl, data, err) => {
             url: visitUrl,
             method: 'GET',
             followAllRedirects: true
-        }, (error, response) => {
+        }, (error, response, body) => {
             if (error) {
                 console.log(error);
                 rejects();
                 throw error;
             } else {
+                response.setEncoding('binary');
                 data = JSON.stringify(response.request._redirect.redirects);
                 resolves(data);
             }
