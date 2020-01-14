@@ -55,20 +55,20 @@ app.use(express.static(__dirname + '/views'));
 // GET - /
 // Shows current time
 app.get('/', (req, res) => {
-      let getTime = async(error) => {
+      let getTime = async() => {
         try{
             let time = await getCurrentTimeObject();
             return time;
-        } catch {
-            console.log(error);
-            res.render('index_error')
+        } catch(err) {
+            console.log(err);
+            return res.render('index_error');
         }
       }
 
-      let render = async(error) => {
+      let render = async() => {
         try {
           let timeData = await getTime();
-          res.render('index', {
+          return res.render('index', {
             year: timeData.year,
             month: timeData.month,
             day: timeData.day,
@@ -76,9 +76,9 @@ app.get('/', (req, res) => {
             minute: timeData.minute,
             second: timeData.second
           });
-        } catch {
-          console.log(error);
-          res.render('index_error')
+        } catch(err){
+          console.log(err);
+          return res.render('index_error');
         }
       }
       render();
@@ -86,45 +86,46 @@ app.get('/', (req, res) => {
 
 // GET - /trace
 // returns current time in your timezone as object
-app.get('/trace', (req, res, err) => {
+app.get('/trace', (req, res) => {
     res.render('trace_page');
-    res.end();
 });
 
 // POST - /trace
 // post URL to trace
-app.post('/trace', (req, res, err) => {
+app.post('/trace', (req, res) => {
 
-    const pageToVisit = String(req.body.tracedPage).trim();
+      const pageToVisit = String(req.body.tracedPage).trim();
+      const formattedPage = (pageToVisit.indexOf('http://') !== -1 || pageToVisit.indexOf('https://') !== -1) ? pageToVisit : 'http://' + pageToVisit;
+
       // Validate pageToVisit to ensure it's a properly constructed URL.
       // Else send invalid URL response.
-      if((pageToVisit.indexOf('http://') !== -1 || pageToVisit.indexOf('https://') !== -1) && pageToVisit.indexOf(' ') <= 0 ){
-        const parsedurl = url.parse(pageToVisit);
+      if(formattedPage.indexOf(' ') <= 0 ){
+        const parsedurl = url.parse(formattedPage);
 
-        let tracer = async (error) => {
+        let tracer = async () => {
           try {
               let traceData = await getURLData(parsedurl);
               let parsedData = JSON.stringify(traceData)
               let formattedData = parsedData.replace("[","").replace("]","");
               return formattedData;
-          } catch {
-            console.log(error);
+          } catch(err) {
+            console.log(err);
             return res.render('traced_page_error');
           }
         }
         
-        let render = async (error) => {
+        let render = async () => {
           try {
               let traceData = await tracer();
               return res.render('traced_page', { traceData: traceData });
-          } catch {
-              console.log(error);
+          } catch(err) {
+              console.log(err);
               return res.render('traced_page_error');
           }
         }
         render(); 
       } else {
-        res.render('traced_page_error');
+        return res.render('traced_page_error');
       }
 });
 
@@ -139,7 +140,7 @@ app.listen('8080', 'localhost', () => {
 
 // getURLData
 // async function to get data from URL using request
-let getURLData = async (visitUrl, data, err) => {
+let getURLData = async (visitUrl, data) => {
   try {
     return new Promise((resolves, rejects) => {
         request({
@@ -158,8 +159,9 @@ let getURLData = async (visitUrl, data, err) => {
             }
         });
     })
-  } catch {
-      throw err;
+  } catch(err) {
+      console.log(err);
+      return;
   }
 };
 
