@@ -5,6 +5,7 @@ const path = require('path');
 const url = require('url');
 const cors = require('cors');
 const ejs = require('ejs');
+const getWeather = require('./data.js');
 
 const helmet = require('helmet');
 const compression = require('compression');
@@ -84,6 +85,14 @@ app.get('/', (req, res) => {
       render();
 });
 
+app.get('/dashboard', (req, res, next) => {
+    const getWeatherData = async () => {
+      let weather = await getWeather('2379574');
+      res.send(weather);
+    };
+    getWeatherData();
+});
+
 // GET - /trace
 // returns current time in your timezone as object
 app.get('/trace', (req, res) => {
@@ -93,15 +102,12 @@ app.get('/trace', (req, res) => {
 // POST - /trace
 // post URL to trace
 app.post('/trace', (req, res) => {
-
       const pageToVisit = String(req.body.tracedPage).trim();
       const formattedPage = (pageToVisit.indexOf('http://') !== -1 || pageToVisit.indexOf('https://') !== -1) ? pageToVisit : 'http://' + pageToVisit;
-
       // Validate pageToVisit to ensure it's a properly constructed URL.
       // Else send invalid URL response.
       if(formattedPage.indexOf(' ') <= 0 ){
         const parsedurl = url.parse(formattedPage);
-
         let tracer = async () => {
           try {
               let traceData = await getURLData(parsedurl);
@@ -111,9 +117,8 @@ app.post('/trace', (req, res) => {
           } catch(err) {
             console.log(err);
             return res.render('traced_page_error');
-          }
-        }
-        
+          };
+        };
         let render = async () => {
           try {
               let traceData = await tracer();
@@ -121,12 +126,12 @@ app.post('/trace', (req, res) => {
           } catch(err) {
               console.log(err);
               return res.render('traced_page_error');
-          }
-        }
+          };
+        };
         render(); 
       } else {
         return res.render('traced_page_error');
-      }
+      };
 });
 
 // Listen
