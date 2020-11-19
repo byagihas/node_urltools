@@ -8,7 +8,7 @@
                             Home
                         </span>
                     </a>
-                    <a class="level-item">
+                    <a class="level-item" href="/trace">
                         <span>
                             Trace
                         </span>
@@ -29,55 +29,12 @@
     </div>
     <div class="box">
         <div class="content level is-mobile">
-            <span class="level-item">Current date: <%- year %>-<%- month %>-<%- day %></span>
+            <span class="level-item">
+                Current date: <%- year %>-<%- month %>-<%- day %> <%- hour %>:<%- minute %>:<%- second %>
+            </span>
         </div>
     </div>
-    <table role="presentation" border="0" cellpadding="0" cellspacing="0" class="body">
-    <tr>
-    <td>&nbsp;</td>
-    <td class="container">
-        <div class="content">
-        <!-- START CENTERED WHITE CONTAINER -->
-        <table role="presentation" class="main">
-            <!-- START MAIN CONTENT AREA -->
-            <tr>
-            <td class="wrapper">
-                <table role="presentation" border="0" cellpadding="0" cellspacing="0">
-                <tr>
-                    <td>
-                    <h1>Current time: <%- year %>-<%- month %>-<%- day %> <%- hour %>:<%- minute %>:<%- second %></h1>
-                    <table role="presentation" border="0" cellpadding="0" cellspacing="0" class="btn btn-primary">
-                        <tbody>
-                        <tr>
-                            <td align="left">
-                            <table role="presentation" border="0" cellpadding="0" cellspacing="0">
-                                <tbody>
-                                <tr>
-                                    <td><a href='/trace'>Trace</a></td>
-                                </tr>
-                                </tbody>
-                            </table>
-                            </td>
-                        </tr>
-                        </tbody>
-                    </table>
-                    <br>
-                    </td>
-                </tr>
-                </table>
-            </td>
-            </tr>
-        <!-- END MAIN CONTENT AREA -->
-        </table>
-        <!-- END CENTERED WHITE CONTAINER -->
-        </div>
-        <div class="box">
-            <button class="button is-success">Success</button>
-
-        </div>
-    </td>
-    <td>&nbsp;</td>
-    </tr>
-    </table>
-
+    <div class="box">
+        <button class="button is-success">Success</button>
+    </div>
 </body>

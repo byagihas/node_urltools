@@ -1,65 +1,79 @@
-router.get('/', (req, res, err) => {
+'use strict';
 
-    res.header('Content-Type', 'text/html');
-    const time = new Date(Date.now()).toISOString()
-    const browsertime = Intl.DateTimeFormat().resolvedOptions().timeZone 
-    const converted = DateTime.fromISO(time, { zone: browsertime });
-   
-    let year = converted.c.year
-    let month = converted.c.month
-    let day = converted.c.day
-    let hour = converted.c.hour
-    let minute = converted.c.minute
-    let seconds = converted.c.second
+require('dotenv').config();
 
-    console.log(time)
-    console.log(converted.c.year)
+const Router = require('express-promise-router');
+const router = new Router();
 
-    var interval_id = setInterval(function() {
-        res.send(
-            '<html><head></head><body><div style=\'text-align:center;font-size:32px;padding:1em;\'>Your current time is:<br/><br/>'
-            + year  + '/' + month + '/' + day + ' ' + hour + ':' + minute + ':' + seconds 
-            + '</div></body></html>')
-    }, 50);
+const getData = require('./data.js');
+const getWeather = require('./functions/get_weather.js');
+const getCrypto = require('./functions/get_crypto.js');
+const getURLData = require('./functions/get_urldata.js');
+const getCurrentTimeObject = require('./functions/get_urldata.js');
+// GET - /
+// Shows current time
+router.get('/', (req, res, next) => {
+  let time = getCurrentTimeObject();
+  res.send(time);
+  next();
+});
 
-    req.socket.on('close', function() {
-      clearInterval(interval_id);
-    });
+router.get('/weather', (req, res, next) => {
+  let user_weather_code = req.query.location;
+  const getWeatherData = async (weathercode) => {
+    let weather = await getWeather(weathercode);
+    res.send(weather);
+    morgan(':method :url :status :res[content-length] - :response-time ms');
+    next();
+    return;
+  };
+  getWeatherData(user_weather_code);
+});
 
-    if(err) throw err
-})
+router.get('/crypto', (req, res, next) => {
+  let number_of_coins = req.query.number;
+  const getCryptoData = async (coins) => {
+    let crypto = await getCrypto(coins);
+    res.send(crypto);
+    next();
+    return;
+  };
+  getCryptoData(number_of_coins);
+});
 
-router.post('/trace', (req, res, err) => {
+// GET - /trace
+// returns current time in your timezone as object
+router.get('/trace', (req, res, next) => {
+  res.render('trace_page');
+  next();
+});
 
-    // load views
-    const pageToVisit = req.body.tracedPage
-    const parsedurl = url.parse(pageToVisit)
-    const query = parsedurl.query
-
-    let theory = {
-      id: '0',
-      title: req.body['title'],
-      content: req.body['content'],
-      category: req.body['category'],
-
-      timer: '0',
-      truthCount: 0,
-      falseCount: 0
-    }
-    console.log("Visiting page " + pageToVisit);
-    request(pageToVisit, function(error, response, body) {
-       if(error) {
-         console.log("Error: " + error);
-       }
-       // Check status code (200 is HTTP OK)
-       console.log("Status code: " + response.statusCode);
-       if(response.statusCode === 200) {
-         // Parse the document body
-    
-       }
-    });
-
-    if(err) throw err
-})
+// POST - /trace
+// post URL to trace
+router.post('/trace', (req, res, next) => {
+  const pageToVisit = String(req.body.tracedPage).trim();
+  const formattedPage = (pageToVisit.indexOf('http://') !== -1 || pageToVisit.indexOf('https://') !== -1) ? pageToVisit : 'http://' + pageToVisit;
+  // Validate pageToVisit to ensure it's a properly constructed URL.
+  // Else send invalid URL response.
+  if(formattedPage.indexOf(' ') <= 0 ){
+    const parsedurl = url.parse(formattedPage);
+    const tracer = async () => {
+        let traceData = await getURLData(parsedurl);
+        let parsedData = JSON.stringify(traceData)
+        let formattedData = parsedData.replace("[","").replace("]","");
+        return formattedData;
+    };
+    const render = async () => {
+        let traceData = await tracer();
+        return res.render('traced_page', { traceData: traceData });
+    };
+    render();
+    next();
+  } else {
+    return res.render('traced_page_error');
+    next();
+  };
+  return;
+});
 
 module.exports = router;
