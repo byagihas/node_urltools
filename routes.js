@@ -1,65 +1,120 @@
-router.get('/', (req, res, err) => {
+'use strict';
 
-    res.header('Content-Type', 'text/html');
-    const time = new Date(Date.now()).toISOString()
-    const browsertime = Intl.DateTimeFormat().resolvedOptions().timeZone 
-    const converted = DateTime.fromISO(time, { zone: browsertime });
-   
-    let year = converted.c.year
-    let month = converted.c.month
-    let day = converted.c.day
-    let hour = converted.c.hour
-    let minute = converted.c.minute
-    let seconds = converted.c.second
+require('dotenv').config();
 
-    console.log(time)
-    console.log(converted.c.year)
+const Router = require('express-promise-router');
+const url = require('url');
+const router = new Router();
 
-    var interval_id = setInterval(function() {
-        res.send(
-            '<html><head></head><body><div style=\'text-align:center;font-size:32px;padding:1em;\'>Your current time is:<br/><br/>'
-            + year  + '/' + month + '/' + day + ' ' + hour + ':' + minute + ':' + seconds 
-            + '</div></body></html>')
-    }, 50);
-
-    req.socket.on('close', function() {
-      clearInterval(interval_id);
-    });
-
-    if(err) throw err
-})
-
-router.post('/trace', (req, res, err) => {
-
-    // load views
-    const pageToVisit = req.body.tracedPage
-    const parsedurl = url.parse(pageToVisit)
-    const query = parsedurl.query
-
-    let theory = {
-      id: '0',
-      title: req.body['title'],
-      content: req.body['content'],
-      category: req.body['category'],
-
-      timer: '0',
-      truthCount: 0,
-      falseCount: 0
+//const getData = require('./data.js');
+const getWeather = require('./functions/get_weather.js');
+const getCrypto = require('./functions/get_crypto.js');
+const getURLData = require('./functions/get_urldata.js');
+const getCurrentTimeObject = require('./functions/get_timeobject.js');
+// GET - /
+// Shows current time
+router.get('/', (req, res, next) => {
+  let getTime = async () => {
+    try {
+      let time = await getCurrentTimeObject();
+      return time;
+    } catch (err) {
+      console.log(err);
+      return res.render('index_error');
     }
-    console.log("Visiting page " + pageToVisit);
-    request(pageToVisit, function(error, response, body) {
-       if(error) {
-         console.log("Error: " + error);
-       }
-       // Check status code (200 is HTTP OK)
-       console.log("Status code: " + response.statusCode);
-       if(response.statusCode === 200) {
-         // Parse the document body
-    
-       }
-    });
+  }
 
-    if(err) throw err
-})
+  let render = async () => {
+    try {
+      let timeData = await getTime();
+      return res.render('index', {
+        year: timeData.year,
+        month: timeData.month,
+        day: timeData.day,
+        hour: timeData.hour,
+        minute: timeData.minute,
+        second: timeData.second
+      });
+    } catch (err) {
+      console.log(err);
+      return res.render('index_error');
+    }
+  }
+  render();
+});
+
+router.get('/weather', (req, res, next) => {
+  let user_weather_code = req.query.location;
+  const getWeatherData = async (weathercode) => {
+    let weather = await getWeather(weathercode);
+    res.send(weather);
+    morgan(':method :url :status :res[content-length] - :response-time ms');
+    next();
+  };
+  getWeatherData(user_weather_code);
+});
+
+router.get('/crypto', (req, res, next) => {
+  let number_of_coins = req.query.number;
+  const getCryptoData = async (coins) => {
+    let crypto = await getCrypto(coins);
+    res.send(crypto);
+    next();
+  };
+  getCryptoData(number_of_coins);
+});
+
+router.get('/dashboard', (req, res, next) => {
+  const getWeatherData = async () => {
+    let weather = await getWeather('2379574');
+    res.send(weather);
+    next();
+  };
+  getWeatherData();
+});
+
+// GET - /trace
+// returns current time in your timezone as object
+router.get('/trace', (req, res, next) => {
+  res.render('trace_page');
+  next();
+});
+
+// POST - /trace
+// post URL to trace
+router.post('/trace', (req, res) => {
+  const pageToVisit = String(req.body.tracedPage).trim();
+  // Validate pageToVisit to ensure it's a properly constructed URL.
+  // Else send invalid URL response.
+  if (pageToVisit.indexOf(' ') < 1 && pageToVisit.match(process.env.URLREGEX) != null) {
+    const parsedurl = url.parse(pageToVisit);
+    console.log(parsedurl);
+
+    const tracer = async () => {
+      return getURLData(parsedurl, (result) => {
+        let parsedData = JSON.stringify(result);
+        formattedData = parsedData.replace("[", "").replace("]", "");
+      }).then((formattedData) => {
+        return formattedData;
+      });
+    };
+
+    const render = async () => {
+      try {
+        let traceData = await tracer();
+        return res.render('traced_page', {
+          traceData: traceData
+        });
+      } catch (err) {
+        console.log(err);
+        return res.render('traced_page_error');
+      };
+    };
+
+    render();
+  } else {
+    return res.render('traced_page_error');
+  };
+});
 
 module.exports = router;
