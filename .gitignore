@@ -1,7 +1,4 @@
 
-#package-lock
-package-lock.json*
-
 #Dockerfile
 Dockerfile
 
